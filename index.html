@@ -71,7 +71,11 @@
 
         <!-- 周视图表格 -->
         <div class="schedule-view">
-            <h2>本周预订情况</h2>
+            <div class="schedule-header">
+                <button class="nav-btn" id="prevWeek">← 上一周</button>
+                <h2 id="weekTitle">本周预订情况</h2>
+                <button class="nav-btn" id="nextWeek">下一周 →</button>
+            </div>
             <div class="table-wrapper">
                 <table id="scheduleTable">
                     <thead>
@@ -91,6 +95,15 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+
+    <!-- 弹窗 -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3 id="modalTitle">预订详情</h3>
+            <div id="modalBody"></div>
         </div>
     </div>
 
