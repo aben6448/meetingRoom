@@ -2,7 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 // ⚠️ 替换成你的 Supabase 配置
 const SUPABASE_URL = 'https://lvidoxkbwaeaaiubggyz.supabase.co'
-const SUPABASE_ANON_KEY = 'SUPABASE_CLIENT_API_KEY'
+const SUPABASE_ANON_KEY = 'sb_publishable_lFYEaCgur3SihqL3XHH4jw_i2BhaFvg'
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
