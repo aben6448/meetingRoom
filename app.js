@@ -3,7 +3,8 @@
 const SUPABASE_URL = 'https://lvidoxkbwaeaaiubggyz.supabase.co'
 const SUPABASE_KEY = 'sb_publishable_lFYEaCgur3SihqL3XHH4jw_i2BhaFvg'
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const { createClient } = supabase;
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // 时间段列表
 const timeSlots = ['上午', '下午'];
