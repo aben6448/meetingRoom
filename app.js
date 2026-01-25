@@ -6,273 +6,118 @@ const SUPABASE_ANON_KEY = 'sb_publishable_lFYEaCgur3SihqL3XHH4jw_i2BhaFvg'
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-// 全局状态
-let currentWeekStart = getMonday(new Date())
-let rooms = ['1732', '1711', '1733']
-let bookings = []
-let currentSlot = null
+// 时间段列表
+const timeSlots = ['上午', '下午'];
+
+// 星期列表
+const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+
+// 会议室列表
+const rooms = ['1732', '1711', '1733'];
+
+// 预订数据（从 localStorage 的 booking 表读取）
+let booking = JSON.parse(localStorage.getItem('booking')) || [];
 
 // 初始化
-document.addEventListener('DOMContentLoaded', init)
-
-async function init() {
-  setupEventListeners()
-  await loadBookings()
-  render()
+function init() {
+    renderSchedule();
+    setupForm();
 }
 
-// 事件监听
-function setupEventListeners() {
-  document.getElementById('prev-week').addEventListener('click', () => {
-    currentWeekStart = addDays(currentWeekStart, -7)
-    loadBookings()
-  })
-  
-  document.getElementById('next-week').addEventListener('click', () => {
-    currentWeekStart = addDays(currentWeekStart, 7)
-    loadBookings()
-  })
-  
-  document.getElementById('close-modal').addEventListener('click', closeModal)
-  document.getElementById('booking-form').addEventListener('submit', handleSubmit)
-  document.getElementById('delete-btn').addEventListener('click', handleDelete)
-  
-  // 点击遮罩关闭
-  document.getElementById('modal').addEventListener('click', (e) => {
-    if (e.target.id === 'modal') closeModal()
-  })
-}
-
-// 加载预定数据
-async function loadBookings() {
-  document.getElementById('loading').style.display = 'block'
-  
-  const weekEnd = addDays(currentWeekStart, 4) // 周一到周五
-  
-  const { data, error } = await supabase
-    .from('booking')
-    .select('*')
-    .gte('date', formatDate(currentWeekStart))
-    .lte('date', formatDate(weekEnd))
-  
-  document.getElementById('loading').style.display = 'none'
-  
-  if (error) {
-    alert('加载失败：' + error.message)
-    return
-  }
-  
-  bookings = data || []
-  render()
-}
-
-// 渲染页面
-function render() {
-  renderWeekDisplay()
-  renderGrid()
-}
-
-function renderWeekDisplay() {
-  const weekEnd = addDays(currentWeekStart, 4)
-  const display = `${formatDate(currentWeekStart, 'MM-DD')} ~ ${formatDate(weekEnd, 'MM-DD')}`
-  document.getElementById('week-display').textContent = display
-}
-
-function renderGrid() {
-  const grid = document.getElementById('bookings-grid')
-  grid.innerHTML = ''
-  
-  rooms.forEach(room => {
-    const section = document.createElement('div')
-    section.className = 'room-section'
+// 渲染周视图表格
+function renderSchedule() {
+    const tbody = document.getElementById('scheduleBody');
+    tbody.innerHTML = '';
     
-    const roomName = document.createElement('div')
-    roomName.className = 'room-name'
-    roomName.textContent = room
-    section.appendChild(roomName)
-    
-    const daysGrid = document.createElement('div')
-    daysGrid.className = 'days-grid'
-    
-    for (let i = 0; i < 5; i++) {
-      const date = addDays(currentWeekStart, i)
-      const dayCard = createDayCard(room, date)
-      daysGrid.appendChild(dayCard)
+    timeSlots.forEach(timeSlot => {
+        const tr = document.createElement('tr');
+        
+        // 时间段列
+        const timeTd = document.createElement('td');
+        timeTd.className = 'time-col';
+        timeTd.textContent = timeSlot;
+        tr.appendChild(timeTd);
+        
+        // 每天的列
+        days.forEach(day => {
+            const td = document.createElement('td');
+            
+            // 查找这个时间段+日期的所有预订
+            const dayBookings = booking.filter(b => 
+                b.day === day && b.timeSlot === timeSlot
+            );
+            
+            if (dayBookings.length > 0) {
+                dayBookings.forEach(b => {
+                    const roomDiv = document.createElement('div');
+                    // 根据会议室号分配颜色
+                    let roomClass = 'room-A';
+                    if (b.room === '1711') roomClass = 'room-B';
+                    if (b.room === '1733') roomClass = 'room-C';
+                    
+                    roomDiv.className = `room-info ${roomClass}`;
+                    roomDiv.innerHTML = `
+                        <span class="room-name">${b.room}</span><br>
+                        <span class="booker-name">${b.booker}</span>
+                    `;
+                    roomDiv.onclick = () => cancelBooking(b);
+                    td.appendChild(roomDiv);
+                });
+            } else {
+                td.innerHTML = '<span class="empty-slot">-</span>';
+            }
+            
+            tr.appendChild(td);
+        });
+        
+        tbody.appendChild(tr);
+    });
+}
+
+// 设置表单提交
+function setupForm() {
+    const form = document.getElementById('bookingForm');
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const room = document.getElementById('room').value;
+        const day = document.getElementById('day').value;
+        const timeSlot = document.getElementById('timeSlot').value;
+        const booker = document.getElementById('booker').value;
+        
+        // 检查是否已预订
+        const exists = booking.some(b => 
+            b.room === room && b.day === day && b.timeSlot === timeSlot
+        );
+        
+        if (exists) {
+            alert('该时间段已被预订！');
+            return;
+        }
+        
+        // 添加预订
+        booking.push({ room, day, timeSlot, booker });
+        localStorage.setItem('booking', JSON.stringify(booking));
+        
+        alert('预订成功！');
+        form.reset();
+        renderSchedule();
+    });
+}
+
+// 取消预订
+function cancelBooking(b) {
+    if (confirm(`确定取消 ${b.room} ${b.day} ${b.timeSlot} 的预订吗？`)) {
+        booking = booking.filter(item => 
+            !(item.room === b.room && 
+              item.day === b.day && 
+              item.timeSlot === b.timeSlot)
+        );
+        localStorage.setItem('booking', JSON.stringify(booking));
+        alert('已取消预订');
+        renderSchedule();
     }
-    
-    section.appendChild(daysGrid)
-    grid.appendChild(section)
-  })
 }
 
-function createDayCard(room, date) {
-  const card = document.createElement('div')
-  card.className = 'day-card'
-  
-  const header = document.createElement('div')
-  header.className = 'day-header'
-  header.textContent = formatDate(date, 'MM-DD ddd')
-  card.appendChild(header)
-  
-  ;['上午', '下午'].forEach(period => {
-    const slot = createPeriodSlot(room, date, period)
-    card.appendChild(slot)
-  })
-  
-  return card
-}
-
-function createPeriodSlot(room, date, period) {
-  const slot = document.createElement('div')
-  slot.className = 'period-slot'
-  
-  const booking = findBooking(room, date, period)
-  
-  if (booking) {
-    slot.classList.add('booked')
-    if (booking.has_leader) {
-      slot.classList.add('has-leader')
-    }
-    
-    slot.innerHTML = `
-      <div class="period-label">${period}</div>
-      <div class="booking-info">
-        <div class="booking-topic">${booking.topic}</div>
-        <div class="booking-details">${booking.booker} · ${booking.department}</div>
-      </div>
-    `
-  } else {
-    slot.innerHTML = `
-      <div class="period-label">${period}</div>
-      <div style="color:#999; font-size:0.85rem;">点击预定</div>
-    `
-  }
-  
-  slot.addEventListener('click', () => openModal(room, date, period, booking))
-  
-  return slot
-}
-
-// 查找预定
-function findBooking(room, date, period) {
-  return bookings.find(b => 
-    b.room === room && 
-    b.date === formatDate(date) && 
-    b.period === period
-  )
-}
-
-// 打开弹窗
-function openModal(room, date, period, booking) {
-  currentSlot = { room, date, period, booking }
-  
-  document.getElementById('room').value = room
-  document.getElementById('datetime').value = `${formatDate(date, 'YYYY-MM-DD')} ${period}`
-  
-  if (booking) {
-    document.getElementById('modal-title').textContent = '查看/编辑预定'
-    document.getElementById('topic').value = booking.topic
-    document.getElementById('department').value = booking.department
-    document.getElementById('booker').value = booking.booker
-    document.getElementById('contact').value = booking.contact
-    document.getElementById('has-leader').checked = booking.has_leader
-    document.getElementById('delete-btn').style.display = 'block'
-  } else {
-    document.getElementById('modal-title').textContent = '预定会议室'
-    document.getElementById('booking-form').reset()
-    document.getElementById('room').value = room
-    document.getElementById('datetime').value = `${formatDate(date, 'YYYY-MM-DD')} ${period}`
-    document.getElementById('delete-btn').style.display = 'none'
-  }
-  
-  document.getElementById('modal').classList.add('active')
-}
-
-function closeModal() {
-  document.getElementById('modal').classList.remove('active')
-  currentSlot = null
-}
-
-// 提交预定
-async function handleSubmit(e) {
-  e.preventDefault()
-  
-  const data = {
-    room: currentSlot.room,
-    date: formatDate(currentSlot.date),
-    period: currentSlot.period,
-    topic: document.getElementById('topic').value,
-    department: document.getElementById('department').value,
-    booker: document.getElementById('booker').value,
-    contact: document.getElementById('contact').value,
-    has_leader: document.getElementById('has-leader').checked
-  }
-  
-  let result
-  if (currentSlot.booking) {
-    // 更新
-    result = await supabase
-      .from('booking')
-      .update(data)
-      .eq('id', currentSlot.booking.id)
-  } else {
-    // 新增
-    result = await supabase
-      .from('booking')
-      .insert(data)
-  }
-  
-  if (result.error) {
-    alert('操作失败：' + result.error.message)
-    return
-  }
-  
-  closeModal()
-  await loadBookings()
-}
-
-// 删除预定
-async function handleDelete() {
-  if (!confirm('确认删除此预定？')) return
-  
-  const { error } = await supabase
-    .from('booking')
-    .delete()
-    .eq('id', currentSlot.booking.id)
-  
-  if (error) {
-    alert('删除失败：' + error.message)
-    return
-  }
-  
-  closeModal()
-  await loadBookings()
-}
-
-// 工具函数
-function getMonday(date) {
-  const d = new Date(date)
-  const day = d.getDay()
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1)
-  return new Date(d.setDate(diff))
-}
-
-function addDays(date, days) {
-  const result = new Date(date)
-  result.setDate(result.getDate() + days)
-  return result
-}
-
-function formatDate(date, format = 'YYYY-MM-DD') {
-  const d = new Date(date)
-  const year = d.getFullYear()
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
-  
-  return format
-    .replace('YYYY', year)
-    .replace('MM', month)
-    .replace('DD', day)
-    .replace('ddd', weekdays[d.getDay()])
-}
+// 页面加载时初始化
+init();
