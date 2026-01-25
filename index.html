@@ -1,86 +1,83 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>会议室预定</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>会议室预订系统</title>
+    <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>📅 会议室预定</h1>
-      <button id="add-room-btn" class="icon-btn">➕</button>
-    </header>
-
-    <!-- 周导航 -->
-    <div class="week-nav">
-      <button id="prev-week" class="nav-btn">◀</button>
-      <div id="week-display"></div>
-      <button id="next-week" class="nav-btn">▶</button>
-    </div>
-
-    <!-- 会议室网格 -->
-    <div id="bookings-grid"></div>
-
-    <!-- 加载提示 -->
-    <div id="loading" class="loading">加载中...</div>
-  </div>
-
-  <!-- 预定弹窗 -->
-  <div id="modal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="modal-title">预定会议室</h2>
-        <button id="close-modal" class="close-btn">✕</button>
-      </div>
-      
-      <form id="booking-form">
-        <div class="form-group">
-          <label>会议室</label>
-          <input type="text" id="room" readonly>
-        </div>
+    <div class="container">
+        <h1>会议室预订系统</h1>
         
-        <div class="form-group">
-          <label>日期时间</label>
-          <input type="text" id="datetime" readonly>
+        <!-- 预订表单 -->
+        <div class="booking-form">
+            <h2>预订会议室</h2>
+            <form id="bookingForm">
+                <label>
+                    会议室：
+                    <select id="room" required>
+                        <option value="1732">1732</option>
+                        <option value="1711">1711</option>
+                        <option value="1733">1733</option>
+                    </select>
+                </label>
+                
+                <label>
+                    日期：
+                    <select id="day" required>
+                        <option value="周一">周一</option>
+                        <option value="周二">周二</option>
+                        <option value="周三">周三</option>
+                        <option value="周四">周四</option>
+                        <option value="周五">周五</option>
+                        <option value="周六">周六</option>
+                        <option value="周日">周日</option>
+                    </select>
+                </label>
+                
+                <label>
+                    时间段：
+                    <select id="timeSlot" required>
+                        <option value="上午">上午</option>
+                        <option value="下午">下午</option>
+                    </select>
+                </label>
+                
+                <label>
+                    预订人：
+                    <input type="text" id="booker" required placeholder="请输入姓名">
+                </label>
+                
+                <button type="submit">预订</button>
+            </form>
         </div>
 
-        <div class="form-group">
-          <label>会议主题 *</label>
-          <input type="text" id="topic" required placeholder="请输入会议主题">
+        <!-- 周视图表格 -->
+        <div class="schedule-view">
+            <h2>本周预订情况</h2>
+            <div class="table-wrapper">
+                <table id="scheduleTable">
+                    <thead>
+                        <tr>
+                            <th class="time-col">时间段</th>
+                            <th>周一</th>
+                            <th>周二</th>
+                            <th>周三</th>
+                            <th>周四</th>
+                            <th>周五</th>
+                            <th>周六</th>
+                            <th>周日</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scheduleBody">
+                        <!-- 动态生成 -->
+                    </tbody>
+                </table>
+            </div>
         </div>
-
-        <div class="form-group">
-          <label>部门 *</label>
-          <input type="text" id="department" required placeholder="请输入部门">
-        </div>
-
-        <div class="form-group">
-          <label>预定人 *</label>
-          <input type="text" id="booker" required placeholder="请输入预定人">
-        </div>
-
-        <div class="form-group">
-          <label>联系方式 *</label>
-          <input type="text" id="contact" required placeholder="请输入联系方式">
-        </div>
-
-        <div class="form-group checkbox-group">
-          <label>
-            <input type="checkbox" id="has-leader">
-            有集团领导参加
-          </label>
-        </div>
-
-        <div class="form-actions">
-          <button type="button" id="delete-btn" class="btn btn-danger" style="display:none">删除预定</button>
-          <button type="submit" class="btn btn-primary">确认预定</button>
-        </div>
-      </form>
     </div>
-  </div>
 
-  <script type="module" src="app.js"></script>
+    <script src="./app.js"></script>
 </body>
 </html>
