@@ -8,7 +8,6 @@ function initSupabase() {
     
     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 }
-
 // 时间段
 const periods = ['上午', '下午'];
 
@@ -31,7 +30,7 @@ async function init() {
     setupForm();
 }
 
-// 设置默认日期为今天
+// 设置默认日期
 function setDefaultDate() {
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('date').value = today;
@@ -106,22 +105,24 @@ function renderSchedule(bookings) {
             if (dayBookings.length > 0) {
                 dayBookings.forEach(booking => {
                     const div = document.createElement('div');
-                    div.className = `booking-item room-${booking.room}`;
+                    
+                    // 根据会议室分配样式
+                    let roomClass = 'room-A';
+                    if (booking.room === '1711') roomClass = 'room-B';
+                    if (booking.room === '1733') roomClass = 'room-C';
+                    
+                    div.className = `room-info ${roomClass}`;
                     div.innerHTML = `
-                        <div class="booking-room">
-                            🏢 ${booking.room}
-                            ${booking.has_leader ? '<span class="leader-badge">⭐ VIP</span>' : ''}
-                        </div>
-                        <div class="booking-topic">${booking.topic}</div>
-                        <div class="booking-info">
-                            👤 ${booking.booker} | ${booking.department}
-                        </div>
+                        <span class="room-name">${booking.room}</span><br>
+                        <span class="booker-name">${booking.topic}</span><br>
+                        <span class="booker-name">${booking.booker}</span>
+                        ${booking.has_leader ? ' ⭐' : ''}
                     `;
                     div.onclick = () => showBookingDetail(booking);
                     td.appendChild(div);
                 });
             } else {
-                td.innerHTML = '<div class="empty-slot">-</div>';
+                td.innerHTML = '<span class="empty-slot">-</span>';
             }
             
             tr.appendChild(td);
@@ -158,7 +159,7 @@ function setupForm() {
                 .eq('period', formData.period);
             
             if (existing && existing.length > 0) {
-                alert('❌ 该时间段已被预订！');
+                alert('该时间段已被预订！');
                 return;
             }
             
@@ -169,14 +170,14 @@ function setupForm() {
             
             if (error) throw error;
             
-            alert('✅ 预订成功！');
+            alert('预订成功！');
             form.reset();
             setDefaultDate();
             await loadBookings();
             
         } catch (error) {
             console.error('预订失败:', error);
-            alert('❌ 预订失败，请重试');
+            alert('预订失败，请重试');
         }
     });
 }
@@ -184,18 +185,16 @@ function setupForm() {
 // 显示预订详情
 async function showBookingDetail(booking) {
     const message = `
-📋 预订详情
+会议室：${booking.room}
+日期：${booking.date}
+时间：${booking.period}
+主题：${booking.topic}
+部门：${booking.department}
+预订人：${booking.booker}
+联系方式：${booking.contact}
+领导参加：${booking.has_leader ? '是' : '否'}
 
-🏢 会议室：${booking.room}
-📆 日期：${booking.date}
-⏰ 时间：${booking.period}
-💼 主题：${booking.topic}
-🏛️ 部门：${booking.department}
-👤 预订人：${booking.booker}
-📞 联系方式：${booking.contact}
-⭐ 领导参加：${booking.has_leader ? '是' : '否'}
-
-是否要取消此预订？
+是否取消此预订？
     `;
     
     if (confirm(message)) {
@@ -207,12 +206,12 @@ async function showBookingDetail(booking) {
             
             if (error) throw error;
             
-            alert('✅ 已取消预订');
+            alert('已取消预订');
             await loadBookings();
             
         } catch (error) {
             console.error('取消失败:', error);
-            alert('❌ 取消失败，请重试');
+            alert('取消失败，请重试');
         }
     }
 }
