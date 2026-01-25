@@ -8,7 +8,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 // 全局状态
 let currentWeekStart = getMonday(new Date())
-let rooms = ['会议室A', '会议室B', '会议室C']
+let rooms = ['1732', '1711', '1733']
 let bookings = []
 let currentSlot = null
 
