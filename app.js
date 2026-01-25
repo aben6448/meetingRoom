@@ -212,13 +212,13 @@ async function handleSubmit(e) {
   if (currentSlot.booking) {
     // 更新
     result = await supabase
-      .from('bookings')
+      .from('booking')
       .update(data)
       .eq('id', currentSlot.booking.id)
   } else {
     // 新增
     result = await supabase
-      .from('bookings')
+      .from('booking')
       .insert(data)
   }
   
@@ -236,7 +236,7 @@ async function handleDelete() {
   if (!confirm('确认删除此预定？')) return
   
   const { error } = await supabase
-    .from('bookings')
+    .from('booking')
     .delete()
     .eq('id', currentSlot.booking.id)
   
