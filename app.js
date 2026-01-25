@@ -9,26 +9,17 @@ function initSupabase() {
     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 }
 
-
 // 时间段
 const periods = ['上午', '下午'];
 
 // 星期映射
-const dayMap = {
-    1: '周一',
-    2: '周二',
-    3: '周三',
-    4: '周四',
-    5: '周五',
-    6: '周六',
-    0: '周日'
-};
+const dayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
 
 // 当前周偏移量（0表示本周，-1表示上周，1表示下周）
 let currentWeekOffset = 0;
 
-// 存储当前周的日期范围
-let currentWeekDates = {};
+// 存储当前周的日期（按顺序：周一到周日）
+let currentWeekDates = [];
 
 // 初始化
 async function init() {
@@ -46,25 +37,27 @@ function setDefaultDate() {
     document.getElementById('date').value = today;
 }
 
-// 获取指定周的日期范围
+// 获取指定周的日期范围（周一到周日）
 function getWeekRange(offset = 0) {
     const now = new Date();
     now.setDate(now.getDate() + (offset * 7)); // 偏移周数
     
-    const dayOfWeek = now.getDay();
+    const dayOfWeek = now.getDay(); // 0=周日, 1=周一, ..., 6=周六
     const monday = new Date(now);
-    monday.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+    
+    // 计算本周一的日期
+    const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    monday.setDate(now.getDate() + daysToMonday);
     
     const sunday = new Date(monday);
     sunday.setDate(monday.getDate() + 6);
     
-    // 保存每天的具体日期
-    currentWeekDates = {};
+    // 保存本周每天的日期（周一到周日）
+    currentWeekDates = [];
     for (let i = 0; i < 7; i++) {
         const date = new Date(monday);
         date.setDate(monday.getDate() + i);
-        const dayName = dayMap[(i + 1) % 7];
-        currentWeekDates[dayName] = date.toISOString().split('T')[0];
+        currentWeekDates.push(date.toISOString().split('T')[0]);
     }
     
     return {
@@ -73,10 +66,12 @@ function getWeekRange(offset = 0) {
     };
 }
 
-// 从日期获取星期
-function getWeekday(dateString) {
+// 格式化日期显示（月-日）
+function formatDate(dateString) {
     const date = new Date(dateString);
-    return dayMap[date.getDay()];
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    return `${month}/${day}`;
 }
 
 // 更新周标题
@@ -89,6 +84,23 @@ function updateWeekTitle(weekRange) {
     } else {
         title.textContent = `${Math.abs(currentWeekOffset)}周前 (${weekRange.start} ~ ${weekRange.end})`;
     }
+}
+
+// 渲染表头（带日期）
+function renderTableHeader() {
+    const thead = document.getElementById('tableHead');
+    thead.innerHTML = `
+        <tr>
+            <th class="time-col">时间段</th>
+            <th>周一<br><span style="font-size: 0.85em; font-weight: normal;">${formatDate(currentWeekDates[0])}</span></th>
+            <th>周二<br><span style="font-size: 0.85em; font-weight: normal;">${formatDate(currentWeekDates[1])}</span></th>
+            <th>周三<br><span style="font-size: 0.85em; font-weight: normal;">${formatDate(currentWeekDates[2])}</span></th>
+            <th>周四<br><span style="font-size: 0.85em; font-weight: normal;">${formatDate(currentWeekDates[3])}</span></th>
+            <th>周五<br><span style="font-size: 0.85em; font-weight: normal;">${formatDate(currentWeekDates[4])}</span></th>
+            <th>周六<br><span style="font-size: 0.85em; font-weight: normal;">${formatDate(currentWeekDates[5])}</span></th>
+            <th>周日<br><span style="font-size: 0.85em; font-weight: normal;">${formatDate(currentWeekDates[6])}</span></th>
+        </tr>
+    `;
 }
 
 // 设置周导航
@@ -109,6 +121,7 @@ async function loadBookings() {
     try {
         const weekRange = getWeekRange(currentWeekOffset);
         updateWeekTitle(weekRange);
+        renderTableHeader();
         
         const { data, error } = await supabaseClient
             .from('booking')
@@ -140,12 +153,11 @@ function renderSchedule(bookings) {
         timeTd.textContent = period;
         tr.appendChild(timeTd);
         
-        // 每天的列
-        Object.values(dayMap).forEach(day => {
+        // 遍历周一到周日（currentWeekDates 已经是正确顺序）
+        currentWeekDates.forEach(cellDate => {
             const td = document.createElement('td');
-            const cellDate = currentWeekDates[day];
             
-            // 找到这个时间段的所有预订
+            // 找到这个日期+时间段的所有预订
             const dayBookings = bookings.filter(b => 
                 b.date === cellDate && b.period === period
             );
@@ -256,7 +268,7 @@ function setupModal() {
     };
 }
 
-// 显示预订详情
+// 显示预订详情（可编辑）
 function showBookingDetail(booking) {
     const modal = document.getElementById('modal');
     const modalTitle = document.getElementById('modalTitle');
@@ -265,45 +277,118 @@ function showBookingDetail(booking) {
     modalTitle.textContent = '预订详情';
     
     modalBody.innerHTML = `
-        <div class="detail-item">
-            <span class="detail-label">会议室：</span>
-            <span class="detail-value">${booking.room}</span>
-        </div>
-        <div class="detail-item">
-            <span class="detail-label">日期：</span>
-            <span class="detail-value">${booking.date}</span>
-        </div>
-        <div class="detail-item">
-            <span class="detail-label">时间段：</span>
-            <span class="detail-value">${booking.period}</span>
-        </div>
-        <div class="detail-item">
-            <span class="detail-label">会议主题：</span>
-            <span class="detail-value">${booking.topic}</span>
-        </div>
-        <div class="detail-item">
-            <span class="detail-label">部门：</span>
-            <span class="detail-value">${booking.department}</span>
-        </div>
-        <div class="detail-item">
-            <span class="detail-label">预订人：</span>
-            <span class="detail-value">${booking.booker}</span>
-        </div>
-        <div class="detail-item">
-            <span class="detail-label">联系方式：</span>
-            <span class="detail-value">${booking.contact}</span>
-        </div>
-        <div class="detail-item">
-            <span class="detail-label">领导参加：</span>
-            <span class="detail-value">${booking.has_leader ? '是 ⭐' : '否'}</span>
-        </div>
-        <div class="modal-actions">
-            <button class="btn-delete" onclick="deleteBooking(${booking.id})">删除预订</button>
-            <button class="btn-cancel" onclick="closeModal()">关闭</button>
-        </div>
+        <form id="editBookingForm" class="quick-booking-form">
+            <input type="hidden" id="edit_id" value="${booking.id}">
+            
+            <label>
+                会议室：
+                <select id="edit_room" required>
+                    <option value="1732" ${booking.room === '1732' ? 'selected' : ''}>1732</option>
+                    <option value="1711" ${booking.room === '1711' ? 'selected' : ''}>1711</option>
+                    <option value="1733" ${booking.room === '1733' ? 'selected' : ''}>1733</option>
+                </select>
+            </label>
+            
+            <label>
+                日期：
+                <input type="date" id="edit_date" value="${booking.date}" required>
+            </label>
+            
+            <label>
+                时间段：
+                <select id="edit_period" required>
+                    <option value="上午" ${booking.period === '上午' ? 'selected' : ''}>上午</option>
+                    <option value="下午" ${booking.period === '下午' ? 'selected' : ''}>下午</option>
+                </select>
+            </label>
+            
+            <label>
+                会议主题：
+                <input type="text" id="edit_topic" value="${booking.topic}" required>
+            </label>
+            
+            <label>
+                部门：
+                <input type="text" id="edit_department" value="${booking.department}" required>
+            </label>
+            
+            <label>
+                预订人：
+                <input type="text" id="edit_booker" value="${booking.booker}" required>
+            </label>
+            
+            <label>
+                联系方式：
+                <input type="tel" id="edit_contact" value="${booking.contact}" required>
+            </label>
+            
+            <label class="checkbox-label">
+                <input type="checkbox" id="edit_has_leader" ${booking.has_leader ? 'checked' : ''}>
+                有领导参加
+            </label>
+            
+            <div class="modal-actions">
+                <button type="submit" style="background-color: #4CAF50;">保存修改</button>
+                <button type="button" class="btn-delete" onclick="deleteBooking(${booking.id})">删除预订</button>
+                <button type="button" class="btn-cancel" onclick="closeModal()">取消</button>
+            </div>
+        </form>
     `;
     
     modal.style.display = 'block';
+    
+    // 绑定编辑表单提交事件
+    document.getElementById('editBookingForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await updateBooking();
+    });
+}
+
+// 更新预订
+async function updateBooking() {
+    const bookingId = document.getElementById('edit_id').value;
+    const formData = {
+        room: document.getElementById('edit_room').value,
+        date: document.getElementById('edit_date').value,
+        period: document.getElementById('edit_period').value,
+        topic: document.getElementById('edit_topic').value,
+        department: document.getElementById('edit_department').value,
+        booker: document.getElementById('edit_booker').value,
+        contact: document.getElementById('edit_contact').value,
+        has_leader: document.getElementById('edit_has_leader').checked
+    };
+    
+    try {
+        // 检查是否与其他预订冲突（排除当前记录）
+        const { data: existing } = await supabaseClient
+            .from('booking')
+            .select('*')
+            .eq('room', formData.room)
+            .eq('date', formData.date)
+            .eq('period', formData.period)
+            .neq('id', bookingId);
+        
+        if (existing && existing.length > 0) {
+            alert('该时间段已被预订！');
+            return;
+        }
+        
+        // 更新预订
+        const { error } = await supabaseClient
+            .from('booking')
+            .update(formData)
+            .eq('id', bookingId);
+        
+        if (error) throw error;
+        
+        alert('修改成功！');
+        closeModal();
+        await loadBookings();
+        
+    } catch (error) {
+        console.error('修改失败:', error);
+        alert('修改失败，请重试');
+    }
 }
 
 // 显示快速预订表单
