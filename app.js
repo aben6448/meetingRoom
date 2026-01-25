@@ -50,7 +50,7 @@ async function loadBookings() {
   const weekEnd = addDays(currentWeekStart, 4) // 周一到周五
   
   const { data, error } = await supabase
-    .from('bookings')
+    .from('booking')
     .select('*')
     .gte('date', formatDate(currentWeekStart))
     .lte('date', formatDate(weekEnd))
