@@ -99,10 +99,31 @@ button:hover {
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
-.schedule-view h2 {
+.schedule-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 20px;
+}
+
+.schedule-header h2 {
     color: #555;
     font-size: 1.3em;
+}
+
+.nav-btn {
+    padding: 8px 16px;
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.nav-btn:hover {
+    background-color: #1976D2;
 }
 
 .table-wrapper {
@@ -132,10 +153,20 @@ td {
     text-align: center;
     vertical-align: top;
     min-height: 80px;
+    cursor: pointer;
+    transition: background-color 0.2s;
 }
 
-tbody tr:hover {
-    background-color: #f9f9f9;
+td:hover {
+    background-color: #f0f0f0;
+}
+
+tbody tr:hover td {
+    background-color: transparent;
+}
+
+tbody tr td:hover {
+    background-color: #f0f0f0;
 }
 
 /* 预订信息卡片 */
@@ -184,10 +215,142 @@ tbody tr:hover {
     font-size: 1.2em;
 }
 
+/* 弹窗 */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 10% auto;
+    padding: 30px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    position: relative;
+}
+
+.close {
+    position: absolute;
+    right: 20px;
+    top: 15px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.close:hover {
+    color: #000;
+}
+
+#modalTitle {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 1.4em;
+}
+
+.detail-item {
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: #555;
+}
+
+.detail-value {
+    color: #666;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.modal-actions button {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+.btn-delete {
+    background-color: #f44336;
+    color: white;
+}
+
+.btn-delete:hover {
+    background-color: #d32f2f;
+}
+
+.btn-cancel {
+    background-color: #9e9e9e;
+    color: white;
+}
+
+.btn-cancel:hover {
+    background-color: #757575;
+}
+
+/* 快速预订表单 */
+.quick-booking-form {
+    margin-top: 20px;
+}
+
+.quick-booking-form label {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+    font-weight: 500;
+    color: #555;
+}
+
+.quick-booking-form input,
+.quick-booking-form select {
+    margin-top: 5px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.quick-booking-form .checkbox-label {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+
 /* 响应式 */
 @media (max-width: 768px) {
     form {
         grid-template-columns: 1fr;
+    }
+    
+    .schedule-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .schedule-header h2 {
+        order: -1;
     }
     
     table {
@@ -196,5 +359,11 @@ tbody tr:hover {
     
     th, td {
         padding: 8px 4px;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 20% auto;
+        padding: 20px;
     }
 }
