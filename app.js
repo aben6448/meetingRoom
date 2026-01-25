@@ -1,10 +1,13 @@
+// 等待 Supabase CDN 加载完成后初始化
+let supabaseClient;
 
-// ⚠️ 替换成你的 Supabase 配置
-const SUPABASE_URL = 'https://lvidoxkbwaeaaiubggyz.supabase.co'
-const SUPABASE_KEY = 'sb_publishable_lFYEaCgur3SihqL3XHH4jw_i2BhaFvg'
-
-const { createClient } = supabase;
-const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+// 初始化 Supabase
+function initSupabase() {
+    const SUPABASE_URL = 'https://lvidoxkbwaeaaiubggyz.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_lFYEaCgur3SihqL3XHH4jw_i2BhaFvg';
+    
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+}
 
 // 时间段列表
 const timeSlots = ['上午', '下午'];
@@ -17,6 +20,7 @@ const rooms = ['1732', '1711', '1733'];
 
 // 初始化
 async function init() {
+    initSupabase();
     await loadBookings();
     setupForm();
 }
@@ -24,7 +28,7 @@ async function init() {
 // 从 Supabase 加载预订数据
 async function loadBookings() {
     try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('booking')
             .select('*');
         
@@ -100,7 +104,7 @@ function setupForm() {
         
         try {
             // 检查是否已预订
-            const { data: existing } = await supabase
+            const { data: existing } = await supabaseClient
                 .from('booking')
                 .select('*')
                 .eq('room', room)
@@ -113,7 +117,7 @@ function setupForm() {
             }
             
             // 添加预订
-            const { error } = await supabase
+            const { error } = await supabaseClient
                 .from('booking')
                 .insert([
                     { room, day, time_slot: timeSlot, booker }
@@ -136,7 +140,7 @@ function setupForm() {
 async function cancelBooking(booking) {
     if (confirm(`确定取消 ${booking.room} ${booking.day} ${booking.time_slot} 的预订吗？`)) {
         try {
-            const { error } = await supabase
+            const { error } = await supabaseClient
                 .from('booking')
                 .delete()
                 .eq('id', booking.id);
