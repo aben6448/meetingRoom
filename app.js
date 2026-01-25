@@ -9,28 +9,67 @@ function initSupabase() {
     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 }
 
-// 时间段列表
-const timeSlots = ['上午', '下午'];
+// 时间段
+const periods = ['上午', '下午'];
 
-// 星期列表
-const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
-
-// 会议室列表
-const rooms = ['1732', '1711', '1733'];
+// 星期映射
+const dayMap = {
+    1: '周一',
+    2: '周二',
+    3: '周三',
+    4: '周四',
+    5: '周五',
+    6: '周六',
+    0: '周日'
+};
 
 // 初始化
 async function init() {
     initSupabase();
+    setDefaultDate();
     await loadBookings();
     setupForm();
 }
 
-// 从 Supabase 加载预订数据
+// 设置默认日期为今天
+function setDefaultDate() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('date').value = today;
+}
+
+// 获取本周日期范围
+function getWeekRange() {
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+    
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    
+    return {
+        start: monday.toISOString().split('T')[0],
+        end: sunday.toISOString().split('T')[0]
+    };
+}
+
+// 从日期获取星期
+function getWeekday(dateString) {
+    const date = new Date(dateString);
+    return dayMap[date.getDay()];
+}
+
+// 加载预订数据
 async function loadBookings() {
     try {
+        const weekRange = getWeekRange();
+        
         const { data, error } = await supabaseClient
             .from('booking')
-            .select('*');
+            .select('*')
+            .gte('date', weekRange.start)
+            .lte('date', weekRange.end)
+            .order('date', { ascending: true });
         
         if (error) throw error;
         
@@ -41,47 +80,48 @@ async function loadBookings() {
     }
 }
 
-// 渲染周视图表格
-function renderSchedule(bookingData) {
+// 渲染表格
+function renderSchedule(bookings) {
     const tbody = document.getElementById('scheduleBody');
     tbody.innerHTML = '';
     
-    timeSlots.forEach(timeSlot => {
+    periods.forEach(period => {
         const tr = document.createElement('tr');
         
         // 时间段列
         const timeTd = document.createElement('td');
         timeTd.className = 'time-col';
-        timeTd.textContent = timeSlot;
+        timeTd.textContent = period;
         tr.appendChild(timeTd);
         
         // 每天的列
-        days.forEach(day => {
+        Object.values(dayMap).forEach(day => {
             const td = document.createElement('td');
             
-            // 查找这个时间段+日期的所有预订
-            const dayBookings = bookingData.filter(b => 
-                b.day === day && b.time_slot === timeSlot
+            // 找到这个时间段的所有预订
+            const dayBookings = bookings.filter(b => 
+                getWeekday(b.date) === day && b.period === period
             );
             
             if (dayBookings.length > 0) {
-                dayBookings.forEach(b => {
-                    const roomDiv = document.createElement('div');
-                    // 根据会议室号分配颜色
-                    let roomClass = 'room-A';
-                    if (b.room === '1711') roomClass = 'room-B';
-                    if (b.room === '1733') roomClass = 'room-C';
-                    
-                    roomDiv.className = `room-info ${roomClass}`;
-                    roomDiv.innerHTML = `
-                        <span class="room-name">${b.room}</span><br>
-                        <span class="booker-name">${b.booker}</span>
+                dayBookings.forEach(booking => {
+                    const div = document.createElement('div');
+                    div.className = `booking-item room-${booking.room}`;
+                    div.innerHTML = `
+                        <div class="booking-room">
+                            🏢 ${booking.room}
+                            ${booking.has_leader ? '<span class="leader-badge">⭐ VIP</span>' : ''}
+                        </div>
+                        <div class="booking-topic">${booking.topic}</div>
+                        <div class="booking-info">
+                            👤 ${booking.booker} | ${booking.department}
+                        </div>
                     `;
-                    roomDiv.onclick = () => cancelBooking(b);
-                    td.appendChild(roomDiv);
+                    div.onclick = () => showBookingDetail(booking);
+                    td.appendChild(div);
                 });
             } else {
-                td.innerHTML = '<span class="empty-slot">-</span>';
+                td.innerHTML = '<div class="empty-slot">-</div>';
             }
             
             tr.appendChild(td);
@@ -91,54 +131,74 @@ function renderSchedule(bookingData) {
     });
 }
 
-// 设置表单提交
+// 表单提交
 function setupForm() {
     const form = document.getElementById('bookingForm');
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const room = document.getElementById('room').value;
-        const day = document.getElementById('day').value;
-        const timeSlot = document.getElementById('timeSlot').value;
-        const booker = document.getElementById('booker').value;
+        const formData = {
+            room: document.getElementById('room').value,
+            date: document.getElementById('date').value,
+            period: document.getElementById('period').value,
+            topic: document.getElementById('topic').value,
+            department: document.getElementById('department').value,
+            booker: document.getElementById('booker').value,
+            contact: document.getElementById('contact').value,
+            has_leader: document.getElementById('has_leader').checked
+        };
         
         try {
-            // 检查是否已预订
+            // 检查冲突
             const { data: existing } = await supabaseClient
                 .from('booking')
                 .select('*')
-                .eq('room', room)
-                .eq('day', day)
-                .eq('time_slot', timeSlot);
+                .eq('room', formData.room)
+                .eq('date', formData.date)
+                .eq('period', formData.period);
             
             if (existing && existing.length > 0) {
-                alert('该时间段已被预订！');
+                alert('❌ 该时间段已被预订！');
                 return;
             }
             
             // 添加预订
             const { error } = await supabaseClient
                 .from('booking')
-                .insert([
-                    { room, day, time_slot: timeSlot, booker }
-                ]);
+                .insert([formData]);
             
             if (error) throw error;
             
-            alert('预订成功！');
+            alert('✅ 预订成功！');
             form.reset();
+            setDefaultDate();
             await loadBookings();
             
         } catch (error) {
             console.error('预订失败:', error);
-            alert('预订失败，请重试');
+            alert('❌ 预订失败，请重试');
         }
     });
 }
 
-// 取消预订
-async function cancelBooking(booking) {
-    if (confirm(`确定取消 ${booking.room} ${booking.day} ${booking.time_slot} 的预订吗？`)) {
+// 显示预订详情
+async function showBookingDetail(booking) {
+    const message = `
+📋 预订详情
+
+🏢 会议室：${booking.room}
+📆 日期：${booking.date}
+⏰ 时间：${booking.period}
+💼 主题：${booking.topic}
+🏛️ 部门：${booking.department}
+👤 预订人：${booking.booker}
+📞 联系方式：${booking.contact}
+⭐ 领导参加：${booking.has_leader ? '是' : '否'}
+
+是否要取消此预订？
+    `;
+    
+    if (confirm(message)) {
         try {
             const { error } = await supabaseClient
                 .from('booking')
@@ -147,15 +207,15 @@ async function cancelBooking(booking) {
             
             if (error) throw error;
             
-            alert('已取消预订');
+            alert('✅ 已取消预订');
             await loadBookings();
             
         } catch (error) {
             console.error('取消失败:', error);
-            alert('取消失败，请重试');
+            alert('❌ 取消失败，请重试');
         }
     }
 }
 
-// 页面加载时初始化
+// 页面加载
 init();
