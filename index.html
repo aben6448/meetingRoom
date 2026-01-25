@@ -9,114 +9,70 @@
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <div class="header">
-        <div class="header-content">
-            <h1>📅 会议室预订系统</h1>
-            <p class="subtitle">智能化会议室管理平台</p>
-        </div>
-    </div>
-
     <div class="container">
+        <h1>会议室预订系统</h1>
+        
         <!-- 预订表单 -->
-        <div class="card booking-card">
-            <div class="card-header">
-                <h2>🎯 新建预订</h2>
-            </div>
+        <div class="booking-form">
+            <h2>预订会议室</h2>
             <form id="bookingForm">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>
-                            <span class="label-icon">🏢</span>
-                            会议室
-                        </label>
-                        <select id="room" required>
-                            <option value="">请选择会议室</option>
-                            <option value="1732">1732 会议室</option>
-                            <option value="1711">1711 会议室</option>
-                            <option value="1733">1733 会议室</option>
-                        </select>
-                    </div>
+                <label>
+                    会议室：
+                    <select id="room" required>
+                        <option value="">请选择</option>
+                        <option value="1732">1732</option>
+                        <option value="1711">1711</option>
+                        <option value="1733">1733</option>
+                    </select>
+                </label>
+                
+                <label>
+                    日期：
+                    <input type="date" id="date" required>
+                </label>
+                
+                <label>
+                    时间段：
+                    <select id="period" required>
+                        <option value="">请选择</option>
+                        <option value="上午">上午</option>
+                        <option value="下午">下午</option>
+                    </select>
+                </label>
 
-                    <div class="form-group">
-                        <label>
-                            <span class="label-icon">📆</span>
-                            日期
-                        </label>
-                        <input type="date" id="date" required>
-                    </div>
+                <label>
+                    会议主题：
+                    <input type="text" id="topic" required placeholder="请输入会议主题">
+                </label>
 
-                    <div class="form-group">
-                        <label>
-                            <span class="label-icon">⏰</span>
-                            时间段
-                        </label>
-                        <select id="period" required>
-                            <option value="">请选择时间段</option>
-                            <option value="上午">上午</option>
-                            <option value="下午">下午</option>
-                        </select>
-                    </div>
+                <label>
+                    部门：
+                    <input type="text" id="department" required placeholder="请输入部门">
+                </label>
+                
+                <label>
+                    预订人：
+                    <input type="text" id="booker" required placeholder="请输入姓名">
+                </label>
 
-                    <div class="form-group full-width">
-                        <label>
-                            <span class="label-icon">💼</span>
-                            会议主题
-                        </label>
-                        <input type="text" id="topic" required placeholder="请输入会议主题">
-                    </div>
+                <label>
+                    联系方式：
+                    <input type="tel" id="contact" required placeholder="请输入联系方式">
+                </label>
 
-                    <div class="form-group">
-                        <label>
-                            <span class="label-icon">🏛️</span>
-                            部门
-                        </label>
-                        <input type="text" id="department" required placeholder="请输入部门名称">
-                    </div>
-
-                    <div class="form-group">
-                        <label>
-                            <span class="label-icon">👤</span>
-                            预订人
-                        </label>
-                        <input type="text" id="booker" required placeholder="请输入姓名">
-                    </div>
-
-                    <div class="form-group">
-                        <label>
-                            <span class="label-icon">📞</span>
-                            联系方式
-                        </label>
-                        <input type="tel" id="contact" required placeholder="请输入联系方式">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="has_leader">
-                            <span class="checkmark"></span>
-                            <span class="label-icon">⭐</span>
-                            有领导参加
-                        </label>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn-submit">
-                    <span>✓</span> 立即预订
-                </button>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="has_leader">
+                    有领导参加
+                </label>
+                
+                <button type="submit">预订</button>
             </form>
         </div>
 
         <!-- 周视图表格 -->
-        <div class="card schedule-card">
-            <div class="card-header">
-                <h2>📊 本周预订情况</h2>
-                <div class="legend">
-                    <span class="legend-item"><span class="dot dot-1732"></span>1732</span>
-                    <span class="legend-item"><span class="dot dot-1711"></span>1711</span>
-                    <span class="legend-item"><span class="dot dot-1733"></span>1733</span>
-                </div>
-            </div>
-            
-            <div class="table-container">
+        <div class="schedule-view">
+            <h2>本周预订情况</h2>
+            <div class="table-wrapper">
                 <table id="scheduleTable">
                     <thead>
                         <tr>
