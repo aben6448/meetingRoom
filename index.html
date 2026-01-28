@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>17层会议室预订系统</title>
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="./style.css">
@@ -10,90 +10,40 @@
 </head>
 <body>
     <div class="container">
-        <h1>17层会议室预订系统</h1>
+        <header class="app-header">
+            <h1>📅 17层会议室</h1>
+        </header>
+
+        <!-- 快捷预订按钮 -->
+        <button class="quick-book-btn" onclick="showQuickBookModal()">
+            ➕ 快速预订
+        </button>
         
-        <!-- 预订表单 -->
-        <div class="booking-form">
-            <h2>预订会议室(注意：不要填写 SM 信息)</h2>
-            <form id="bookingForm">
-                <label>
-                    会议室：
-                    <select id="room" required>
-                        <option value="">请选择</option>
-                        <option value="1732">1732</option>
-                        <option value="1711">1711</option>
-                        <option value="1733">1733</option>
-                    </select>
-                </label>
-                
-                <label>
-                    日期：
-                    <input type="date" id="date" required>
-                </label>
-                
-                <label>
-                    时间段：
-                    <select id="period" required>
-                        <option value="">请选择</option>
-                        <option value="上午">上午</option>
-                        <option value="下午">下午</option>
-                    </select>
-                </label>
-
-                <label>
-                    会议主题：
-                    <input type="text" id="topic" required placeholder="请输入会议主题">
-                </label>
-
-                <label>
-                    部门：
-                    <input type="text" id="department" required placeholder="请输入部门">
-                </label>
-                
-                <label>
-                    预订人：
-                    <input type="text" id="booker" required placeholder="请输入姓名">
-                </label>
-
-                <label>
-                    联系方式：
-                    <input type="tel" id="contact" required placeholder="请输入联系方式">
-                </label>
-
-                <label class="checkbox-label">
-                    <input type="checkbox" id="has_leader">
-                    有领导参加
-                </label>
-                
-                <button type="submit">预订</button>
-            </form>
+        <!-- 周导航 -->
+        <div class="week-nav">
+            <button class="nav-btn" id="prevWeek">‹ 上周</button>
+            <div class="week-title" id="weekTitle">本周</div>
+            <button class="nav-btn" id="nextWeek">下周 ›</button>
         </div>
 
-        <!-- 周视图表格 -->
-        <div class="schedule-view">
-            <div class="schedule-header">
-                <button class="nav-btn" id="prevWeek">← 上一周</button>
-                <h2 id="weekTitle">本周预订情况</h2>
-                <button class="nav-btn" id="nextWeek">下一周 →</button>
-            </div>
-            <div class="table-wrapper">
-                <table id="scheduleTable">
-                    <thead id="tableHead">
-                        <!-- 动态生成 -->
-                    </thead>
-                    <tbody id="scheduleBody">
-                        <!-- 动态生成 -->
-                    </tbody>
-                </table>
-            </div>
+        <!-- 日期标签页 -->
+        <div class="date-tabs" id="dateTabs">
+            <!-- 动态生成 -->
+        </div>
+
+        <!-- 当日时间段列表 -->
+        <div class="time-slots" id="timeSlots">
+            <!-- 动态生成 -->
         </div>
     </div>
 
     <!-- 弹窗 -->
     <div id="modal" class="modal">
         <div class="modal-content">
-            <span class="close">&times;</span>
-            <h3 id="modalTitle">预订详情</h3>
+            <div class="modal-header">
+                <h3 id="modalTitle">预订详情</h3>
+                <span class="close" onclick="closeModal()">×</span>
+            </div>
             <div id="modalBody"></div>
         </div>
     </div>
