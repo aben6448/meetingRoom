@@ -4,21 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>17层会议室预订系统</title>
-    <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="./style.css">
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="style.css">
+    <!-- 引入 Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div class="container">
+        <!-- 头部 -->
         <header class="app-header">
             <h1>📅 17层会议室</h1>
         </header>
 
-        <!-- 快捷预订按钮 -->
-        <button class="quick-book-btn" onclick="showQuickBookModal()">
-            ➕ 快速预订
-        </button>
-        
+        <!-- 快速预订按钮 -->
+        <button class="quick-book-btn" onclick="showQuickBookModal()">➕ 快速预订</button>
+
         <!-- 周导航 -->
         <div class="week-nav">
             <button class="nav-btn" id="prevWeek">‹ 上周</button>
@@ -28,12 +27,12 @@
 
         <!-- 日期标签页 -->
         <div class="date-tabs" id="dateTabs">
-            <!-- 动态生成 -->
+            <!-- 由JS动态生成 -->
         </div>
 
-        <!-- 当日时间段列表 -->
+        <!-- 时间段列表 -->
         <div class="time-slots" id="timeSlots">
-            <!-- 动态生成 -->
+            <div class="loading">加载中...</div>
         </div>
     </div>
 
@@ -41,13 +40,15 @@
     <div id="modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="modalTitle">预订详情</h3>
-                <span class="close" onclick="closeModal()">×</span>
+                <span id="modalTitle"></span>
+                <span class="close" onclick="closeModal()">&times;</span>
             </div>
-            <div id="modalBody"></div>
+            <div id="modalBody">
+                <!-- 由JS动态生成 -->
+            </div>
         </div>
     </div>
 
-    <script src="./app.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
