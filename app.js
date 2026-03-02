@@ -215,7 +215,7 @@ function renderRoomCard(booking) {
 
 // 根据ID获取预订信息
 function getBookingById(id) {
-    return allBookings.find(b => b.id === id);
+    return allBookings.find(b => String(b.id) === String(id));
 }
 
 // 显示详情 - 修复：使用data-id避免XSS
@@ -291,6 +291,7 @@ function editBooking(bookingId) {
     modalTitle.textContent = '编辑预订';
     modalBody.innerHTML = `
         <form id="editForm" class="booking-form">
+            <input type="hidden" id="edit_id" value="${escapeHtml(booking.id)}">
             <div class="form-group">
                 <label class="form-label">会议室 *</label>
                 <select id="edit_room" class="form-select" required>
