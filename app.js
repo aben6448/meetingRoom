@@ -68,6 +68,14 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// 将日期格式化为 YYYY-MM-DD（使用本地时间）
+function formatLocalDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 // 获取本周日期范围
 function getWeekRange(offset = 0) {
     const now = new Date();
@@ -82,14 +90,14 @@ function getWeekRange(offset = 0) {
         const date = new Date(monday);
         date.setDate(monday.getDate() + i);
         currentWeekDates.push({
-            date: date.toISOString().split('T')[0],
+            date: formatLocalDate(date),
             day: dayNames[(i + 1) % 7],
             month: date.getMonth() + 1,
             dayNum: date.getDate()
         });
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = formatLocalDate(new Date());
     selectedDateIndex = currentWeekDates.findIndex(d => d.date === today);
     if (selectedDateIndex === -1) selectedDateIndex = 0;
 
